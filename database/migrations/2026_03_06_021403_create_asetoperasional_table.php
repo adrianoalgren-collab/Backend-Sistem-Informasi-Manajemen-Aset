@@ -80,11 +80,7 @@ return new class extends Migration
             $table->string('kode_barang', 50)
                 ->unique();
 
-            $table->enum('kondisi_asetoperasional', [
-                'Baik',
-                'Rusak Ringan',
-                'Rusak Berat'
-            ]);
+            $table->string('kondisi_asetoperasional');
 
             $table->string('lokasi_asetoperasional');
 

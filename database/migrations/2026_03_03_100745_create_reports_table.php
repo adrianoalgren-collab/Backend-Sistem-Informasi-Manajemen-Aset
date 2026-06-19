@@ -13,7 +13,7 @@ return new class extends Migration
 
             $table->string('judul', 255);
             $table->date('tanggal');
-            $table->enum('status', ['pending', 'disetujui', 'ditolak'])->default('pending');
+            $table->string('status')->default('pending');  
             $table->string('file_path', 500)->nullable(); // cukup panjang untuk full path/URL
 
             // Foreign key ke users

@@ -80,11 +80,7 @@ return new class extends Migration
             Status Approval Manager
             =========================================
             */
-            $table->enum('status_approval', [
-                'Pending',
-                'Approved',
-                'Rejected'
-            ])->default('Pending');
+             $table->string('status_approval')->default('Pending');
 
             /*
             =========================================

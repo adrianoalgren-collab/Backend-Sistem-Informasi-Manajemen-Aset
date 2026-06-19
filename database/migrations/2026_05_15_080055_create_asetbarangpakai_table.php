@@ -25,14 +25,7 @@ return new class extends Migration
             $table->string('kategori_asetbarangpakai');
 
             // Kondisi barang
-            $table->enum('kondisi_asetbarangpakai', [
-                'Baik',
-                'Rusak Ringan',
-                'Rusak Berat',
-                'Dalam Perbaikan',
-                'Tidak Digunakan'
-            ]);
-
+            $table->string('kondisi_asetbarangpakai');
             // Lokasi penyimpanan
             $table->string('lokasi_asetbarangpakai');
 

@@ -54,12 +54,7 @@ return new class extends Migration
             Kondisi Kendaraan
             =========================================
             */
-            $table->enum('kondisi_kendaraan', [
-                'baik',
-                'rusak_ringan',
-                'rusak_berat',
-                'tidak_aktif',
-            ])->default('baik'); // ← enum + default untuk data integrity
+            $table->string('kondisi_kendaraan')->default('baik');
 
             /*
             =========================================

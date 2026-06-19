@@ -64,11 +64,7 @@ return new class extends Migration
             Status Request  ← FIX KAPITAL
             =========================================
             */
-            $table->enum('status_request', [
-                'Pending',
-                'Diterima',
-                'Ditolak'
-            ])->default('Pending');
+            $table->string('status_request')->default('Pending');
 
             /*
             =========================================
