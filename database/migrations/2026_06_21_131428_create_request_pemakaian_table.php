@@ -11,21 +11,21 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('request_pengadaan', function (Blueprint $table) {
+        Schema::create('request_pemakaian', function (Blueprint $table) {
 
             /*
             =========================================
             Primary Key
             =========================================
             */
-            $table->id('id_request_pengadaan');
+            $table->id('id_request_pemakaian');
 
             /*
             =========================================
-            Kode Request Pengadaan
+            Kode Request Pemakaian
             =========================================
             */
-            $table->string('kode_request_pengadaan', 50)
+            $table->string('kode_request_pemakaian', 50)
                   ->unique();
 
             /*
@@ -37,25 +37,26 @@ return new class extends Migration
 
             /*
             =========================================
-            Nama Pengadaan
+            Relasi Aset Barang Pakai
             =========================================
             */
-            $table->string('nama_pengadaan');
+            $table->foreignId('id_barang_pakai')
+                  ->constrained('aset_barang_pakai', 'id_barang_pakai')
+                  ->cascadeOnDelete();
 
             /*
             =========================================
-            Kategori Pengadaan
+            Jumlah Pemakaian
             =========================================
             */
-            $table->string('kategori_pengadaan');
+            $table->integer('jumlah_pemakaian');
 
             /*
             =========================================
-            Jenis Aset (Operasional / Barang Pakai)
+            Keterangan Pemakaian
             =========================================
             */
-            $table->enum('jenis_aset', ['operasional', 'barang_pakai'])
-                  ->default('operasional');
+            $table->text('keterangan_pemakaian');
 
             /*
             =========================================
@@ -77,36 +78,17 @@ return new class extends Migration
 
             /*
             =========================================
-            Relasi Aset Barang Pakai (nullable, khusus jenis_aset = barang_pakai)
+            File Request Pemakaian
             =========================================
             */
-            $table->foreignId('id_barang_pakai')
-                  ->nullable()
-                  ->constrained('aset_barang_pakai', 'id_barang_pakai')
-                  ->nullOnDelete();
-
-            /*
-            =========================================
-            Jumlah Pengadaan (khusus Barang Pakai)
-            =========================================
-            */
-            $table->integer('jumlah_pengadaan')
-                  ->nullable();
-
-            /*
-            =========================================
-            File Request Pengadaan
-            =========================================
-            */
-            $table->string('file_request')
-                  ->nullable();
+            $table->string('file_request');
 
             /*
             =========================================
             Status Approval Manager
             =========================================
             */
-             $table->string('status_approval')->default('Pending');
+            $table->string('status_approval')->default('Pending');
 
             /*
             =========================================
@@ -125,6 +107,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('request_pengadaan');
+        Schema::dropIfExists('request_pemakaian');
     }
 };

@@ -6,9 +6,6 @@ use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
-    /**
-     * Run the migrations.
-     */
     public function up(): void
     {
         Schema::create('aset_barang_pakai', function (Blueprint $table) {
@@ -21,11 +18,6 @@ return new class extends Migration
             // Nama barang
             $table->string('nama_asetbarangpakai');
 
-            // Kategori barang
-            $table->string('kategori_asetbarangpakai');
-
-            // Kondisi barang
-            $table->string('kondisi_asetbarangpakai');
             // Lokasi penyimpanan
             $table->string('lokasi_asetbarangpakai');
 
@@ -48,9 +40,6 @@ return new class extends Migration
         });
     }
 
-    /**
-     * Reverse the migrations.
-     */
     public function down(): void
     {
         Schema::dropIfExists('aset_barang_pakai');

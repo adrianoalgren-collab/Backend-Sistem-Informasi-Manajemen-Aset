@@ -17,8 +17,6 @@ class AsetBarangPakai extends Model
     protected $fillable = [
         'kode_asetbarangpakai',
         'nama_asetbarangpakai',
-        'kategori_asetbarangpakai',
-        'kondisi_asetbarangpakai',
         'lokasi_asetbarangpakai',
         'stok_asetbarangpakai',
         'satuan_asetbarangpakai',
@@ -26,9 +24,6 @@ class AsetBarangPakai extends Model
         'id_manufacturer',
     ];
 
-    /**
-     * Relasi ke Manufacturer
-     */
     public function manufacturer()
     {
         return $this->belongsTo(

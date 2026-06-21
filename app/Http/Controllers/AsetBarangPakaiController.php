@@ -8,9 +8,6 @@ use Illuminate\Support\Facades\Storage;
 
 class AsetBarangPakaiController extends Controller
 {
-    /**
-     * Display a listing of the resource.
-     */
     public function index()
     {
         $data = AsetBarangPakai::with('manufacturer')
@@ -20,88 +17,75 @@ class AsetBarangPakaiController extends Controller
         return response()->json($data);
     }
 
-    /**
-     * Store a newly created resource in storage.
-     */
     public function store(Request $request)
-    {
-        $validated = $request->validate([
-            'kode_asetbarangpakai' => 'required|string|max:50|unique:aset_barang_pakai,kode_asetbarangpakai',
-            'nama_asetbarangpakai' => 'required|string|max:255',
-            'kategori_asetbarangpakai' => 'required|string|max:255',
-            'kondisi_asetbarangpakai' => 'required|in:Baik,Rusak Ringan,Rusak Berat,Dalam Perbaikan,Tidak Digunakan',
-            'lokasi_asetbarangpakai' => 'required|string|max:255',
-            'stok_asetbarangpakai' => 'required|integer|min:0',
-            'satuan_asetbarangpakai' => 'required|string|max:100',
-            'foto_asetbarangpakai' => 'nullable|image|mimes:jpg,jpeg,png|max:2048',
-            'id_manufacturer' => 'nullable|exists:manufacturers,id_manufacturer',
-        ]);
+{
+    $validated = $request->validate([
+        'kode_asetbarangpakai' => 'required|string|max:50|unique:aset_barang_pakai,kode_asetbarangpakai',
+        'nama_asetbarangpakai' => 'required|string|max:255',
+        'lokasi_asetbarangpakai' => 'required|string|max:255',
+        'stok_asetbarangpakai' => 'required|integer|min:0',
+        'satuan_asetbarangpakai' => 'required|string|max:100',
+        'foto_asetbarangpakai' => 'nullable|image|mimes:jpg,jpeg,png|max:2048',
+        'id_manufacturer' => 'nullable|exists:manufacturers,id_manufacturer',
+    ]);
 
-        if ($request->hasFile('foto_asetbarangpakai')) {
-            $validated['foto_asetbarangpakai'] = $request
-                ->file('foto_asetbarangpakai')
-                ->store('aset_barang_pakai', 'public');
-        }
-
-        $data = AsetBarangPakai::create($validated);
-
-        return response()->json([
-            'message' => 'Data aset barang pakai berhasil ditambahkan',
-            'data' => $data
-        ], 201);
+    if ($request->hasFile('foto_asetbarangpakai')) {
+        $file = $request->file('foto_asetbarangpakai');
+        $filename = time() . '_' . uniqid() . '.' . $file->getClientOriginalExtension();
+        $validated['foto_asetbarangpakai'] = $file->storeAs('aset_barang_pakai', $filename, 'public');
     }
 
-    /**
-     * Display the specified resource.
-     */
+    $data = AsetBarangPakai::create($validated);
+
+    return response()->json([
+        'message' => 'Data aset barang pakai berhasil ditambahkan',
+        'data' => $data
+    ], 201);
+}
+
     public function show($id)
     {
         $data = AsetBarangPakai::with('manufacturer')
             ->findOrFail($id);
 
-        return response()->json($data);
+        return response()->json([
+            'status' => 'success',
+            'data'   => $data,
+        ]);
     }
 
-    /**
-     * Update the specified resource in storage.
-     */
     public function update(Request $request, $id)
-    {
-        $data = AsetBarangPakai::findOrFail($id);
+{
+    $data = AsetBarangPakai::findOrFail($id);
 
-        $validated = $request->validate([
-            'kode_asetbarangpakai' => 'required|string|max:50|unique:aset_barang_pakai,kode_asetbarangpakai,' . $id . ',id_barang_pakai',
-            'nama_asetbarangpakai' => 'required|string|max:255',
-            'kategori_asetbarangpakai' => 'required|string|max:255',
-            'kondisi_asetbarangpakai' => 'required|in:Baik,Rusak Ringan,Rusak Berat,Dalam Perbaikan,Tidak Digunakan',
-            'lokasi_asetbarangpakai' => 'required|string|max:255',
-            'stok_asetbarangpakai' => 'required|integer|min:0',
-            'satuan_asetbarangpakai' => 'required|string|max:100',
-            'foto_asetbarangpakai' => 'nullable|image|mimes:jpg,jpeg,png|max:2048',
-            'id_manufacturer' => 'nullable|exists:manufacturers,id_manufacturer',
-        ]);
+    $validated = $request->validate([
+        'kode_asetbarangpakai' => 'required|string|max:50|unique:aset_barang_pakai,kode_asetbarangpakai,' . $id . ',id_barang_pakai',
+        'nama_asetbarangpakai' => 'required|string|max:255',
+        'lokasi_asetbarangpakai' => 'required|string|max:255',
+        'stok_asetbarangpakai' => 'required|integer|min:0',
+        'satuan_asetbarangpakai' => 'required|string|max:100',
+        'foto_asetbarangpakai' => 'nullable|image|mimes:jpg,jpeg,png|max:2048',
+        'id_manufacturer' => 'nullable|exists:manufacturers,id_manufacturer',
+    ]);
 
-        if ($request->hasFile('foto_asetbarangpakai')) {
-            if ($data->foto_asetbarangpakai && Storage::disk('public')->exists($data->foto_asetbarangpakai)) {
-                Storage::disk('public')->delete($data->foto_asetbarangpakai);
-            }
-
-            $validated['foto_asetbarangpakai'] = $request
-                ->file('foto_asetbarangpakai')
-                ->store('aset_barang_pakai', 'public');
+    if ($request->hasFile('foto_asetbarangpakai')) {
+        if ($data->foto_asetbarangpakai && Storage::disk('public')->exists($data->foto_asetbarangpakai)) {
+            Storage::disk('public')->delete($data->foto_asetbarangpakai);
         }
 
-        $data->update($validated);
-
-        return response()->json([
-            'message' => 'Data aset barang pakai berhasil diperbarui',
-            'data' => $data
-        ]);
+        $file = $request->file('foto_asetbarangpakai');
+        $filename = time() . '_' . uniqid() . '.' . $file->getClientOriginalExtension();
+        $validated['foto_asetbarangpakai'] = $file->storeAs('aset_barang_pakai', $filename, 'public');
     }
 
-    /**
-     * Remove the specified resource from storage.
-     */
+    $data->update($validated);
+
+    return response()->json([
+        'message' => 'Data aset barang pakai berhasil diperbarui',
+        'data' => $data
+    ]);
+}
+
     public function destroy($id)
     {
         $data = AsetBarangPakai::findOrFail($id);

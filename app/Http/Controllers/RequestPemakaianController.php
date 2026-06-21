@@ -3,24 +3,25 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
-use App\Models\RequestPengadaan;
+use App\Models\RequestPemakaian;
 use App\Models\AsetBarangPakai;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\ValidationException;
 
-class RequestPengadaanController extends Controller
+class RequestPemakaianController extends Controller
 {
     /**
      * Display a listing of the resource.
      */
     public function index()
     {
-        $requests = RequestPengadaan::with(['department', 'user', 'barangPakai'])
+        $requests = RequestPemakaian::with(['department', 'user', 'barangPakai'])
             ->latest()
             ->get();
 
         return response()->json([
-            'message' => 'Daftar request pengadaan',
+            'message' => 'Daftar request pemakaian',
             'data'    => $requests
         ], 200);
     }
@@ -35,20 +36,14 @@ class RequestPengadaanController extends Controller
             'tanggal_request' =>
                 'required|date',
 
-            'nama_pengadaan' =>
-                'required|string|max:100',
-
-            'kategori_pengadaan' =>
-                'required|string|max:100',
-
-            'jenis_aset' =>
-                'required|in:operasional,barang_pakai',
-
             'id_barang_pakai' =>
-                'required_if:jenis_aset,barang_pakai|nullable|exists:aset_barang_pakai,id_barang_pakai',
+                'required|exists:aset_barang_pakai,id_barang_pakai',
 
-            'jumlah_pengadaan' =>
-                'required_if:jenis_aset,barang_pakai|nullable|integer|min:1',
+            'jumlah_pemakaian' =>
+                'required|integer|min:1',
+
+            'keterangan_pemakaian' =>
+                'required|string',
 
             'id_department' =>
                 'required|exists:department,id_department',
@@ -66,32 +61,26 @@ class RequestPengadaanController extends Controller
         =========================================
         */
         $filePath = $request->file('file_request')
-            ->store('request_pengadaan', 'public');
+            ->store('request_pemakaian', 'public');
 
         /*
         =========================================
-        Create Request Pengadaan
+        Create Request Pemakaian
         =========================================
         */
-        $requestPengadaan = RequestPengadaan::create([
+        $requestPemakaian = RequestPemakaian::create([
 
             'tanggal_request' =>
                 $validated['tanggal_request'],
 
-            'nama_pengadaan' =>
-                $validated['nama_pengadaan'],
-
-            'kategori_pengadaan' =>
-                $validated['kategori_pengadaan'],
-
-            'jenis_aset' =>
-                $validated['jenis_aset'],
-
             'id_barang_pakai' =>
-                $validated['id_barang_pakai'] ?? null,
+                $validated['id_barang_pakai'],
 
-            'jumlah_pengadaan' =>
-                $validated['jumlah_pengadaan'] ?? null,
+            'jumlah_pemakaian' =>
+                $validated['jumlah_pemakaian'],
+
+            'keterangan_pemakaian' =>
+                $validated['keterangan_pemakaian'],
 
             'id_department' =>
                 $validated['id_department'],
@@ -109,11 +98,11 @@ class RequestPengadaanController extends Controller
                 null,
         ]);
 
-        $requestPengadaan->load(['department', 'user', 'barangPakai']);
+        $requestPemakaian->load(['department', 'user', 'barangPakai']);
 
         return response()->json([
-            'message' => 'Request pengadaan berhasil dibuat',
-            'data'    => $requestPengadaan
+            'message' => 'Request pemakaian berhasil dibuat',
+            'data'    => $requestPemakaian
         ], 201);
     }
 
@@ -122,12 +111,12 @@ class RequestPengadaanController extends Controller
      */
     public function show(string $id)
     {
-        $requestPengadaan = RequestPengadaan::with(['department', 'user', 'barangPakai'])
+        $requestPemakaian = RequestPemakaian::with(['department', 'user', 'barangPakai'])
             ->findOrFail($id);
 
         return response()->json([
-            'message' => 'Detail request pengadaan',
-            'data'    => $requestPengadaan
+            'message' => 'Detail request pemakaian',
+            'data'    => $requestPemakaian
         ], 200);
     }
 
@@ -149,49 +138,55 @@ class RequestPengadaanController extends Controller
 
             /*
             =========================================
-            Lock Row Request Pengadaan
+            Lock Row Request Pemakaian
             =========================================
             */
-            $requestPengadaan = RequestPengadaan::lockForUpdate()
+            $requestPemakaian = RequestPemakaian::lockForUpdate()
                 ->findOrFail($id);
 
-            $statusSebelumnya = $requestPengadaan->status_approval;
-
-            $requestPengadaan->update($validated);
+            $statusSebelumnya = $requestPemakaian->status_approval;
+            $statusBaru = $validated['status_approval'] ?? $statusSebelumnya;
 
             /*
             =========================================
-            Auto Tambah Stok Barang Pakai
+            Auto Kurangi Stok Barang Pakai
             (hanya saat transisi ke Approved, bukan saat
             sudah Approved sebelumnya, supaya stok tidak
-            bertambah dua kali)
+            terpotong dua kali)
             =========================================
             */
-            $statusBaru = $validated['status_approval'] ?? $statusSebelumnya;
-
             if (
                 $statusBaru === 'Approved' &&
-                $statusSebelumnya !== 'Approved' &&
-                $requestPengadaan->jenis_aset === 'barang_pakai' &&
-                $requestPengadaan->id_barang_pakai
+                $statusSebelumnya !== 'Approved'
             ) {
                 $barangPakai = AsetBarangPakai::lockForUpdate()
-                    ->find($requestPengadaan->id_barang_pakai);
+                    ->find($requestPemakaian->id_barang_pakai);
 
-                if ($barangPakai) {
-
-                    $barangPakai->increment(
-                        'stok_asetbarangpakai',
-                        $requestPengadaan->jumlah_pengadaan ?? 0
-                    );
+                if (!$barangPakai) {
+                    throw ValidationException::withMessages([
+                        'id_barang_pakai' => 'Barang pakai tidak ditemukan.',
+                    ]);
                 }
+
+                if ($barangPakai->stok_asetbarangpakai < $requestPemakaian->jumlah_pemakaian) {
+                    throw ValidationException::withMessages([
+                        'jumlah_pemakaian' => 'Stok tidak cukup untuk menyetujui pemakaian ini. Stok tersedia: ' . $barangPakai->stok_asetbarangpakai,
+                    ]);
+                }
+
+                $barangPakai->decrement(
+                    'stok_asetbarangpakai',
+                    $requestPemakaian->jumlah_pemakaian
+                );
             }
 
-            $requestPengadaan->load(['department', 'user', 'barangPakai']);
+            $requestPemakaian->update($validated);
+
+            $requestPemakaian->load(['department', 'user', 'barangPakai']);
 
             return response()->json([
-                'message' => 'Request pengadaan berhasil diupdate',
-                'data'    => $requestPengadaan
+                'message' => 'Request pemakaian berhasil diupdate',
+                'data'    => $requestPemakaian
             ], 200);
         });
     }
@@ -201,9 +196,9 @@ class RequestPengadaanController extends Controller
      */
     public function destroy(string $id)
     {
-        $requestPengadaan = RequestPengadaan::find($id);
+        $requestPemakaian = RequestPemakaian::find($id);
 
-        if (!$requestPengadaan) {
+        if (!$requestPemakaian) {
 
             return response()->json([
                 'message' => 'Data tidak ditemukan'
@@ -215,16 +210,16 @@ class RequestPengadaanController extends Controller
         Hapus File
         =========================================
         */
-        if ($requestPengadaan->file_request) {
+        if ($requestPemakaian->file_request) {
 
             Storage::disk('public')
-                ->delete($requestPengadaan->file_request);
+                ->delete($requestPemakaian->file_request);
         }
 
-        $requestPengadaan->delete();
+        $requestPemakaian->delete();
 
         return response()->json([
-            'message' => 'Request pengadaan berhasil dihapus'
+            'message' => 'Request pemakaian berhasil dihapus'
         ], 200);
     }
 }

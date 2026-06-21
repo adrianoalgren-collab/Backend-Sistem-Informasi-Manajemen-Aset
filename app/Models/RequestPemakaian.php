@@ -5,7 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
-class RequestPengadaan extends Model
+class RequestPemakaian extends Model
 {
     use HasFactory;
 
@@ -14,14 +14,14 @@ class RequestPengadaan extends Model
     Nama Table
     ========================================
     */
-    protected $table = 'request_pengadaan';
+    protected $table = 'request_pemakaian';
 
     /*
     ========================================
     Primary Key Custom
     ========================================
     */
-    protected $primaryKey = 'id_request_pengadaan';
+    protected $primaryKey = 'id_request_pemakaian';
 
     public $incrementing = true;
     protected $keyType = 'int';
@@ -33,16 +33,14 @@ class RequestPengadaan extends Model
     */
     protected $fillable = [
         'tanggal_request',
-        'nama_pengadaan',
-        'kategori_pengadaan',
+        'id_barang_pakai',
+        'jumlah_pemakaian',
+        'keterangan_pemakaian',
         'id_department',
         'id_user',
         'file_request',
         'status_approval',
         'catatan_manager',
-        'jenis_aset',
-        'id_barang_pakai',
-        'jumlah_pengadaan',
     ];
 
     /*
@@ -51,8 +49,8 @@ class RequestPengadaan extends Model
     ========================================
     */
     protected $casts = [
-        'tanggal_request' => 'date',
-        'jumlah_pengadaan' => 'integer',
+        'tanggal_request' => 'date:Y-m-d',
+        'jumlah_pemakaian' => 'integer',
     ];
 
     protected static function boot()
@@ -60,10 +58,24 @@ class RequestPengadaan extends Model
         parent::boot();
 
         static::creating(function ($model) {
-            // Generates e.g. "REQ-20260519-0001"
+            // Generates e.g. "PMK-20260621-0001"
             $latest = static::whereDate('created_at', today())->count() + 1;
-            $model->kode_request_pengadaan = 'REQ-' . date('Ymd') . '-' . str_pad($latest, 4, '0', STR_PAD_LEFT);
+            $model->kode_request_pemakaian = 'PMK-' . date('Ymd') . '-' . str_pad($latest, 4, '0', STR_PAD_LEFT);
         });
+    }
+
+    /*
+    ========================================
+    Relasi ke Aset Barang Pakai
+    ========================================
+    */
+    public function barangPakai()
+    {
+        return $this->belongsTo(
+            AsetBarangPakai::class,
+            'id_barang_pakai',
+            'id_barang_pakai'
+        );
     }
 
     /*
@@ -91,20 +103,6 @@ class RequestPengadaan extends Model
             User::class,
             'id_user',
             'id'
-        );
-    }
-
-    /*
-    ========================================
-    Relasi ke Aset Barang Pakai
-    ========================================
-    */
-    public function barangPakai()
-    {
-        return $this->belongsTo(
-            AsetBarangPakai::class,
-            'id_barang_pakai',
-            'id_barang_pakai'
         );
     }
 }

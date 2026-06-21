@@ -14,6 +14,7 @@
     use App\Http\Controllers\AsetKendaraanController;
     use App\Http\Controllers\AsetBarangPakaiController;
     use App\Http\Controllers\KodeBarangController;
+    use App\Http\Controllers\RequestPemakaianController;
 
 
     /*
@@ -118,5 +119,12 @@
         Route::put('/asetkendaraan/{id}', [AsetKendaraanController::class, 'update']); 
         Route::delete('/asetkendaraan/{id}', [AsetKendaraanController::class, 'destroy']); 
         Route::get('/asetkendaraan/{id}/history', [AsetKendaraanController::class, 'history']);
+
+        // ===== Request Pemakaian =====
+        Route::get('/request/pemakaian', [RequestPemakaianController::class, 'index']);         
+        Route::post('/request/pemakaian', [RequestPemakaianController::class, 'store']);       
+        Route::get('/request/pemakaian/{id}', [RequestPemakaianController::class, 'show']);     
+        Route::put('/request/pemakaian/{id}', [RequestPemakaianController::class, 'update']);   
+        Route::delete('/request/pemakaian/{id}', [RequestPemakaianController::class, 'destroy']); 
         
     });
