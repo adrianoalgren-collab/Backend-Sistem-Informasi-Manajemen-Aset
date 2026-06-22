@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\Storage;
 
 class RequestPemakaian extends Model
 {
@@ -52,6 +53,13 @@ class RequestPemakaian extends Model
         'tanggal_request' => 'date:Y-m-d',
         'jumlah_pemakaian' => 'integer',
     ];
+
+    /*
+    ========================================
+    Appends — field tambahan yang ikut di JSON
+    ========================================
+    */
+    protected $appends = ['file_request_url'];
 
     protected static function boot()
     {
@@ -104,5 +112,17 @@ class RequestPemakaian extends Model
             'id_user',
             'id'
         );
+    }
+
+    /*
+    ========================================
+    Accessor: URL lengkap untuk file request
+    ========================================
+    */
+    public function getFileRequestUrlAttribute()
+    {
+        return $this->file_request
+            ? Storage::disk('public')->url($this->file_request)
+            : null;
     }
 }
